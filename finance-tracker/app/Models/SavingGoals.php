@@ -5,18 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Notifications extends Model
+class SavingGoals extends Model
 {
     use HasFactory;
-    protected $tabel = 'notifications';
+    protected $table = 'saving_goals';
     protected $fillable = [
         'user_id',
-        'message',
-        'is_read',
+        'goal_name',
+        'target_amount',
+        'current_amount',
+        'deadline',
     ];
+
     // Relasi ke User
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
 }
