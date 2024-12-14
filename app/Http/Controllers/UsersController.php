@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Models\User;
 use Illuminate\Http\Request;
 
-class CategoriesController extends Controller
+class UsersController extends Controller
 {
-    /**
+  /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $categories = Category::all();
-        return response()->json($categories);
+        $users = User::all();
+        return response()->json($users);
     }
 
     /**
@@ -30,16 +30,16 @@ class CategoriesController extends Controller
     public function store(Request $request)
     {
         // Validasi input
-        $request->validate([
+        $validated= $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'required',
+            'password' => 'required',
         ]);
 
         // Membuat kategori baru
         try {
-            $category = Category::create([
-                'name' => $request->name,
-            ]);
-            return response()->json($category, 201);
+            $users = User::create($validated);
+            return response()->json($users, 201);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -48,15 +48,15 @@ class CategoriesController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Category $category)
+    public function show(User $user)
     {
-        return response()->json($category);
+        return response()->json($user);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Category $category)
+    public function edit(User $user)
     {
         //
     }
@@ -64,26 +64,28 @@ class CategoriesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Category $category)
+    public function update(Request $request, User $user)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'required',
+            'password' => 'required',
         ]);
     
-        $category->update($validated);
+        $user->update($validated);
     
-        return response()->json($category);
+        return response()->json($user);
     }
     
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Category $category)
+    public function destroy(User $user)
     {
-        $category->delete();
+        $user->delete();
     
-        return response()->json(['message' => 'Category deleted successfully']);
+        return response()->json(['message' => 'User deleted successfully']);
     }
     
 }

@@ -38,24 +38,27 @@ class TransactionsController extends Controller
             'transaction_date' => 'required|date',
         ]);
     
-        $transaction = Transaction::create($validated);
-    
-        return response()->json($transaction, 201);
+        try {
+            $transaction = Transaction::create($validated);
+            return response()->json($transaction, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
     
 
     /**
      * Display the specified resource.
      */
-    public function show(Transaction $transactions)
+    public function show(Transaction $transaction)
     {
-        //
+        return response()->json($transaction);
     }
-
+    
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Transaction $transactions)
+    public function edit(Transaction $transaction)
     {
         //
     }
@@ -63,16 +66,28 @@ class TransactionsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Transaction $transactions)
+    public function update(Request $request, Transaction $transaction)
     {
-        //
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'category_id' => 'required|exists:categories,id',
+            'amount' => 'required|numeric',
+            'type' => 'required|in:income,expense',
+            'transaction_date' => 'required|date',
+        ]);
+    
+        $transaction->update($validated);
+    
+        return response()->json($transaction);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Transaction $transactions)
+    public function destroy(Transaction $transaction)
     {
-        //
+        $transaction->delete();
+    
+        return response()->json(['message' => 'Transaction deleted successfully']);
     }
 }
