@@ -13,7 +13,8 @@ class TransactionsController extends Controller
      */
     public function index()
     {
-        //
+        $transaction = Transaction::with('category')->get();
+        return response()->json($transaction);
     }
 
     /**
