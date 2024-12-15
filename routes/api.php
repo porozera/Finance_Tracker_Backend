@@ -21,5 +21,9 @@ Route::apiResource('budgets', BudgetsController::class);
 //notification alrd readed
 Route::patch('notifications/{id}/read', [NotificationsController::class, 'markAsRead']);
 
+Route::get('/testing', function () {
+    return response()->json(['message' => 'Resources API is working']);
+});
+
 
 
