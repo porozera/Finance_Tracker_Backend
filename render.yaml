@@ -18,4 +18,4 @@ services:
         value: <database-username>
       - key: DB_PASSWORD
         value: <database-password>
-    dockerfilePath: ./DockerFile
+    dockerfilePath: ./Dockerfile
