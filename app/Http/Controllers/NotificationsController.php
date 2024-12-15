@@ -10,9 +10,15 @@ class NotificationsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $notifications = Notifications::query();
+
+        if ($request->has('user_id')) {
+            $notifications->where('user_id', $request->user_id);
+        }
+
+        return response()->json($notifications->get());
     }
 
     /**
@@ -28,15 +34,22 @@ class NotificationsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'message' => 'required|string',
+        ]);
+
+        $notification = Notifications::create($validated);
+        return response()->json($notification, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Notifications $notifications)
+    public function show($id)
     {
-        //
+        $notification = Notifications::findOrFail($id);
+        return response()->json($notification);
     }
 
     /**
@@ -58,8 +71,17 @@ class NotificationsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Notifications $notifications)
+    public function destroy($id)
     {
-        //
+        $notification = Notifications::findOrFail($id);
+        $notification->delete();
+        return response()->json(['message' => 'Notification deleted successfully']);
+    }
+
+    public function markAsRead($id)
+    {
+        $notification = Notifications::findOrFail($id);
+        $notification->update(['is_read' => true]);
+        return response()->json(['message' => 'Notification marked as read', 'notification' => $notification]);
     }
 }
