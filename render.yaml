@@ -7,15 +7,15 @@ services:
     plan: free
     envVars:
       - key: APP_KEY
-        value: base64:F6+usfj7EbmbyCE/pgMEzvL2MFTSx5gnz22X2F/ic9Q=
+        value: <app-key>
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
-        value: 127.0.0.1
-      - key: financetracker
+        value: <database-host>
+      - key: DB_DATABASE
         value: <database-name>
       - key: DB_USERNAME
-        value: root
+        value: <database-username>
       - key: DB_PASSWORD
-        value:
+        value: <database-password>
     dockerfilePath: ./Dockerfile
