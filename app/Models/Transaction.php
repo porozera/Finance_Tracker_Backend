@@ -13,9 +13,11 @@ class Transaction extends Model
     protected $fillable = [
         'user_id',
         'category_id',
+        'budget_id',
+        'saving_goals',
         'amount',
         'type',
-        'description',
+        'title',
         'transaction_date',
     ];
 
@@ -29,5 +31,15 @@ class Transaction extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function budget()
+    {
+        return $this->belongsTo(Budgets::class);
+    }
+
+    public function saving_goal()
+    {
+        return $this->belongsTo(SavingGoals::class);
     }
 }

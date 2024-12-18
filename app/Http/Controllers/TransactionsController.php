@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Budgets;
+use App\Models\SavingGoals;
 use App\Models\Transaction;
 use App\Models\Transactions;
 use Illuminate\Http\Request;
@@ -30,21 +32,52 @@ class TransactionsController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'category_id' => 'required|exists:categories,id',
-            'amount' => 'required|numeric',
-            'type' => 'required|in:income,expense',
-            'transaction_date' => 'required|date',
-        ]);
-    
-        try {
-            $transaction = Transaction::create($validated);
+        try{
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id', 
+                'budget_id' => 'required|exists:budgets,id', 
+                'saving_goals' => 'nullable|exists:saving_goals,id', 
+                'category_id' => 'required|exists:categories,id',
+                'amount' => 'required|numeric|min:0', 
+                'type' => 'required|in:income,expense', 
+                'title' => 'nullable|string|max:255', 
+                'transaction_date' => 'required|date', 
+            ]);
+        
+            $transaction = Transaction::create([
+                'user_id' => $validated['user_id'],
+                'budget_id' => $validated['budget_id'],
+                'saving_goals' => $validated['saving_goals'] ?? null,
+                'category_id' => $validated['category_id'],
+                'amount' => $validated['amount'],
+                'type' => $validated['type'],
+                'title' => $validated['title'] ?? null,
+                'transaction_date' => $validated['transaction_date'],
+            ]);
+        
+            if ($validated['type'] === 'expense') {
+                $budget = Budgets::find($validated['budget_id']);
+                if ($budget) {
+                    $budget->update([
+                        'current_amount' => $budget->current_amount - $validated['amount']
+                    ]);
+                }
+            }
+        
+            if ($validated['saving_goals'] && $validated['type'] === 'income') {
+                $savingGoals = SavingGoals::find($validated['saving_goals']);
+                if ($savingGoals) {
+                    $savingGoals->update([
+                        'current_amount' => $savingGoals->current_amount + $validated['amount']
+                    ]);
+                }
+            }
             return response()->json($transaction, 201);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+    
     
 
     /**
@@ -66,28 +99,108 @@ class TransactionsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Transaction $transaction)
+    public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'category_id' => 'required|exists:categories,id',
-            'amount' => 'required|numeric',
-            'type' => 'required|in:income,expense',
-            'transaction_date' => 'required|date',
-        ]);
+        // yang
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id', 
+                'budget_id' => 'required|exists:budgets,id', 
+                'saving_goals' => 'nullable|exists:saving_goals,id', 
+                'category_id' => 'required|exists:categories,id',
+                'amount' => 'required|numeric|min:0', 
+                'type' => 'required|in:income,expense', 
+                'title' => 'nullable|string|max:255', 
+                'transaction_date' => 'required|date', 
+            ]);
     
-        $transaction->update($validated);
+            $transaction = Transaction::findOrFail($id);
     
-        return response()->json($transaction);
+            $amountDifference = $validated['amount'] - $transaction->amount;
+            $typeChanged = $validated['type'] !== $transaction->type;
+    
+            $budget = Budgets::find($transaction->budget_id);
+            if ($budget) {
+                if ($transaction->type === 'expense') {
+                    $budget->current_amount += $transaction->amount; 
+                }
+    
+                if ($validated['type'] === 'expense') {
+                    $budget->current_amount -= $validated['amount']; 
+                } 
+    
+                $budget->save();
+            }
+
+            if ($transaction->saving_goals) {
+                $savingGoals = SavingGoals::find($transaction->saving_goals);
+                if ($savingGoals) {
+                    if ($transaction->type === 'income') {
+                        $savingGoals->current_amount -= $transaction->amount; 
+                    }
+    
+                    if ($validated['type'] === 'income' && $validated['saving_goals'] == $transaction->saving_goals) {
+                        $savingGoals->current_amount += $validated['amount']; 
+                    }
+    
+                    $savingGoals->save();
+                }
+            }
+    
+            if ($validated['saving_goals'] && $validated['saving_goals'] !== $transaction->saving_goals) {
+                $newSavingGoals = SavingGoals::find($validated['saving_goals']);
+                if ($newSavingGoals) {
+                    if ($validated['type'] === 'income') {
+                        $newSavingGoals->current_amount += $validated['amount'];
+                    }
+                    $newSavingGoals->save();
+                }
+            }
+    
+            $transaction->update($validated);
+    
+            return response()->json($transaction, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
+    
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Transaction $transaction)
+    public function destroy($id)
     {
-        $transaction->delete();
+        try {
+            // Ambil data transaksi berdasarkan ID
+            $transaction = Transaction::findOrFail($id);
     
-        return response()->json(['message' => 'Transaction deleted successfully']);
+            // Kembalikan nilai ke tabel Budgets
+            $budget = Budgets::find($transaction->budget_id);
+            if ($budget) {
+                if ($transaction->type === 'expense') {
+                    $budget->current_amount += $transaction->amount; // Kembalikan pengurangan pada saat transaksi
+                } 
+                $budget->save();
+            }
+    
+            // Kembalikan nilai ke tabel SavingGoals jika terkait
+            if ($transaction->saving_goals) {
+                $savingGoals = SavingGoals::find($transaction->saving_goals);
+                if ($savingGoals && $transaction->type === 'income') {
+                    $savingGoals->current_amount -= $transaction->amount; // Kembalikan penambahan pada saat transaksi
+                    $savingGoals->save();
+                }
+            }
+    
+            // Hapus transaksi
+            $transaction->delete();
+    
+            // Kembalikan respons JSON
+            return response()->json(['message' => 'Transaction deleted successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
+    
 }

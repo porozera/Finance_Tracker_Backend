@@ -11,7 +11,6 @@ use App\Http\Controllers\NotificationsController;
 Route::apiResource('categories', CategoriesController::class);
 Route::apiResource('transactions', TransactionsController::class);
 Route::apiResource('users', UsersController::class);
-Route::apiResource('categories', CategoriesController::class);
 Route::apiResource('saving-goals', SavingGoalsController::class);
 Route::apiResource('notifications', NotificationsController::class);
 Route::apiResource('budgets', BudgetsController::class);

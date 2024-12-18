@@ -13,4 +13,11 @@ class Category extends Model
         'name'
     ];
 
+    public function transaction()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
 }
+
+

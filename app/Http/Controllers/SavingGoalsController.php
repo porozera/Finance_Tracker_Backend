@@ -29,17 +29,26 @@ class SavingGoalsController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'goal_name' => 'required|string|max:255',
-            'target_amount' => 'required|numeric|min:0',
-            'current_amount' => 'nullable|numeric|min:0',
-            'deadline' => 'required|date|after:today',
-        ]);
+        try{
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'goal_name' => 'required|string|max:255',
+                'target_amount' => 'required|numeric|min:0',
+                'current_amount' => 'nullable|numeric|min:0', // Tambahkan validasi untuk current_amount
+                'deadline' => 'required|date|after:today',
+            ]);
+        
+            // Tetapkan current_amount menjadi 0 jika tidak diberikan
+            $validated['current_amount'] = $validated['current_amount'] ?? 0;
+        
+            $goal = SavingGoals::create($validated);
 
-        $goal = SavingGoals::create($validated);
-        return response()->json($goal, 201);
+            return response()->json($goal, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
+    
 
     /**
      * Display the specified resource.
@@ -53,7 +62,7 @@ class SavingGoalsController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(SavingGolas $savingGolas)
+    public function edit(SavingGoals $savingGolas)
     {
         //
     }

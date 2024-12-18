@@ -23,4 +23,8 @@ class SavingGoals extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function transacation()
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }

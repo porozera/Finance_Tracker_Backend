@@ -11,8 +11,8 @@ class Budgets extends Model
     protected $table = 'budgets';
     protected $fillable = [
         'user_id',
-        'category_id',
-        'amount',
+        'first_amount',
+        'current_amount',
     ];
 
     // Relasi ke User
@@ -22,8 +22,8 @@ class Budgets extends Model
     }
 
     // Relasi ke Category
-    public function category()
+    public function transaction()
     {
-        return $this->belongsTo(Category::class);
+        return $this->hasMany(Transaction::class);
     }
 }

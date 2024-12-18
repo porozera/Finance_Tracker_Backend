@@ -18,7 +18,7 @@ class BudgetsController extends Controller
             $budgets->where('user_id', $request->user_id);
         }
 
-        return response()->json($budgets->with('category', 'user')->get());
+        return response()->json($budgets->with('user')->get());
     }
 
     /**
@@ -34,14 +34,22 @@ class BudgetsController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'category_id' => 'required|exists:categories,id',
-            'amount' => 'required|numeric|min:0',
-        ]);
-
-        $budget = Budgets::create($validated);
-        return response()->json($budget, 201);
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'first_amount' => 'required|numeric|min:0',
+            ]);
+    
+            $budget = Budgets::create([
+                'user_id' => $validated['user_id'],
+                'first_amount' => $validated['first_amount'],
+                'current_amount' => $validated['first_amount'],
+            ]);
+    
+            return response()->json($budget, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -49,7 +57,7 @@ class BudgetsController extends Controller
      */
     public function show($id)
     {
-        $budget = Budget::with('category', 'user')->findOrFail($id);
+        $budget = Budgets::with('user')->findOrFail($id);
         return response()->json($budget);
     }
 
@@ -69,8 +77,9 @@ class BudgetsController extends Controller
         $budget = Budgets::findOrFail($id);
 
         $validated = $request->validate([
-            'category_id' => 'sometimes|exists:categories,id',
-            'amount' => 'sometimes|numeric|min:0',
+            'user_id' => 'required|exists:users,id',
+            'first_amount' => 'required|numeric|min:0',
+            'current_amount' => 'required|numeric|min:0',
         ]);
 
         $budget->update($validated);
